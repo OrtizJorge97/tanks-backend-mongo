@@ -6,8 +6,6 @@ from itsdangerous import URLSafeTimedSerializer
 from datetime import timedelta
 import os
 
-from sqlalchemy.engine import create_engine
-from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 
 load_dotenv()

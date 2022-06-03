@@ -1,9 +1,6 @@
 from flask import Blueprint
 from flask_cors import CORS
-from sqlalchemy.engine import create_engine
-from sqlalchemy.orm import sessionmaker
 
-from .models import Base
 import os
 
 main = Blueprint('main', __name__)
@@ -19,10 +16,5 @@ CORS(auth_blueprint, resources={r"/auth/*": {"origins": "*"}}, supports_credenti
 tank_api_blueprint = Blueprint('tank', __name__, url_prefix="/tank")
 CORS(tank_api_blueprint, resources={r"/tank/*": {"origins": "*"}}, supports_credentials=True)
 
-engine = create_engine(os.getenv('CONNECTION_STRING'), echo=True)
-Session = sessionmaker(engine)
-session = Session()
-Base.metadata.create_all(engine)
-print("tables created!")
 
 from . import api, socket, auth, tanks_api

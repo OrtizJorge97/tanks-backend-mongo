@@ -3,8 +3,9 @@ from flask_socketio import join_room, leave_room, send, emit
 from flask_jwt_extended import get_jwt
 
 from .. import socketio
-from . import auth_blueprint, session
+from . import auth_blueprint
 from .models import *
+from app.main.Services.database import mongodb_handler
 
 sessionid_rooms = {}
 
@@ -51,18 +52,28 @@ def on_leave(data):
     #send(username + ' has left the room.', to=room)
 
 @socketio.on('join_user_sessionid', namespace="/private")
-def on_join(user):
-    print(user)
+@mongodb_handler
+def on_join(db, args, kwargs):
+    print("PRINTING ARGS IN ON JOIN")
+    print(args)
+    print("PRINTING KWARGS IN ON JOIN")
+    print(kwargs)
     print(request.sid)
+    user = args[0]
     email = user["email"]
     company = user["company"] #this is used as the 'room' for private msgs
     session_id = request.sid
 
-    user_db = session.query(Users).filter_by(email=email).first()
-    if not session.query(Sessions).filter_by(session_identifier=session_id).first():
-        session.add(Sessions(session_identifier=session_id,
-                            user_id=user_db.id))
-        session.commit()
+    user_collection = db['users']
+    session_collection = db['sessions']
+    session_db = session_collection.find_one({"session_token": session_id})
+    user_db = user_collection.find_one({"email": email})
+
+    if not session_db:
+        session_collection.insert_one({
+            "session_token": session_id,
+            "user_id": user_db.get('_id', None)
+        })
 
     join_room(company)
     print("user joined succesfully")

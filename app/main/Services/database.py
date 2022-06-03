@@ -1,14 +1,122 @@
 # from backend.app.main import session
-from .. import session
-from ..models import *
-from app.main import engine
+import pymongo
+from pymongo import MongoClient
 
-from sqlalchemy.sql import text
+def mongodb_handler(func):
+    def inner(*args, **kwargs):
+        print("---------PRINTING ARGS-----------")
+        print(args)
+        print(kwargs)
+        client = MongoClient(host='test_mongodb',
+                        port=27017, 
+                        username='root', 
+                        password='pass',
+                        authSource="admin")
+        db = client["tanks_db"]
+        response = func(db, args, kwargs)
+        client.close()
+        return response
+    inner.__name__ = func.__name__
+    return inner
 
 class AsyncDataBaseManager:
-    db_session = session
 
-    def join_user_company_by_email(email):
+    def get_company_tanks(db, company):
+        tanks_collection = db['tanks']
+
+        tanks_db = tanks_collection.find({"company": company})
+
+        tanks_result = [{
+            "id": tank_db['tank_name'],
+            "WtrLvlMin": tank_db['WtrLvl']['tank_min_value'],
+            "WtrLvlMax": tank_db['WtrLvl']['tank_max_value'],
+            "OxygenPercentageMin": tank_db['OxygenPercentage']['tank_min_value'],
+            "OxygenPercentageMax": tank_db['OxygenPercentage']['tank_max_value'],
+            "PhMin": tank_db['Ph']['tank_min_value'],
+            "PhMax": tank_db['Ph']['tank_min_value']
+        } for tank_db in tanks_db] if tanks_db else []
+
+        return tanks_result
+
+    def store_measurements(db, tanks_data):
+        measurements_collection = db['measurements']
+        
+        result = measurements_collection.insert_many(tanks_data)
+        print("BULK INSERT RESULTS")
+        print(result)
+
+    def get_company_staff_emails(db, company):
+        users_collection = db['users']
+
+        users_staff_db = users_collection.find({
+            "company": company, 
+            "$or": [{
+                "role": "Administrator"
+            },
+            {
+                "role": "Supervisor"
+            }]
+        })
+
+        users_staff_email = [user_staff_db['email'] for user_staff_db in users_staff_db]
+
+        print("USERS STAFF FOR COMPANY")
+        print(users_staff_email)
+
+        return users_staff_email
+
+    def get_company_tanks_parameters(db, company):
+        tanks_collection = db['tanks']
+
+        tanks_db = tanks_collection.find({"company": company})
+        tanks_result = [tank_db for tank_db in tanks_db]
+        print("GETTING COMPANY TANKS")
+        print(tanks_result)
+        return tanks_result
+
+    def get_historic(db, company):
+        measurements_collection = db['measurements']
+
+        tanks_measurements_db = measurements_collection.find({"company": company})
+        #print("TANKS RESULT FROM DB")
+        #print([t for t in tanks_measurements_db])
+        tanks_filtered = list(set([tank_measurement_object['id'] for tank_measurement_object in tanks_measurements_db]))
+        print("TANKS FILTERED")
+        print(tanks_filtered)
+        historic_data = []
+        for tank in tanks_filtered:
+            tank_historic = {
+                "id": tank,
+                "wtrLvlValues": None,
+                "oxygenPercentageValues": None,
+                "phValues": None,
+                "timestamp": None
+            }
+            wtrLvlValues = []
+            oxygenPercentageValues = []
+            phValues = []
+            timestamp = []
+            for tank_measurement_db in tanks_measurements_db:
+                print("PRINTING TANK MEASUREMENT DB")
+                print(tank_measurement_db)
+                if tank_measurement_db['id'] == tank:
+                    print("EQUALS WEEEE")
+                    wtrLvlValues.append(tank_measurement_db["wtrLvlValue"])
+                    oxygenPercentageValues.append(tank_measurement_db["oxygenPercentageValue"])
+                    phValues.append(tank_measurement_db["phValue"])
+                    timestamp.append(tank_measurement_db["timestamp"])
+            print("WATER VALUES")
+            print(wtrLvlValues)
+            print("PRINTING HISTORIC TANK")
+            print(tank_historic)
+            historic_data.append(tank_historic)
+        
+        print("PRINTING HISTORIC DATA")
+        print(historic_data)
+        return historic_data
+
+    
+    """def join_user_company_by_email(email):
         user_db = AsyncDataBaseManager.db_session.query(Users.name, Users.last_name, Users.password, Companies.company, Users.email, Users.role, Users.user_verified).select_from(Users)\
             .join(Companies, Companies.id == Users.company_id)\
             .filter(Users.email == email)\
@@ -296,47 +404,6 @@ class AsyncDataBaseManager:
             print("---------------SUPERVISOR AND ADMINISTRATOR EMAILS-----------------")
             print(tanks_parameters_results)
         
-        return tanks_parameters_results
+        return tanks_parameters_results"""
 
 
-"""
-class Measurements(Base):
-    __tablename__ = "measurements"
-    id = Column(Integer, primary_key=True, unique=True, autoincrement=True, nullable=False)
-    value = Column(Float, nullable=False)
-    timestamp = Column(Integer, nullable=False)
-    tank_id = Column(Integer, ForeignKey('tanks.id'))
-    measures_categories_id = Column(Integer, ForeignKey('measures_categories.id'))
-
-select t.id as tanks_id, mc.id as meas_cat_id, t.tank_name, mc.measure_type, mc.tank_min_value, mc.tank_min_value 
-from tanks t 
-join measures_categories mc on t.id = mc.tank_id
-where tank_name = 'MT001';
-"""
-
-
-"""
-id = Column(Integer, primary_key=True, unique=True, autoincrement=True, nullable=False)
-    name = Column(String(20))
-    last_name = Column(String(50))
-    email = Column(String(40), unique=True, nullable=False)
-    password = Column(Text)
-    user_verified = Column(Boolean())
-    role = Column(String(10))
-
-
-class Tanks(Base): #child from companies
-    __tablename__ = "tanks"
-    id = Column(Integer, primary_key=True, unique=True, autoincrement=True, nullable=False)
-    tank_name = Column(String(30), nullable=False)
-    company_id = Column(Integer, ForeignKey('companies.id'))
-    tanks = relationship('Measures_Categories')
-
-class Measures_Categories(Base): #child from tanks
-    __tablename__ = "measures_categories"
-    id = Column(Integer, primary_key=True, unique=True, autoincrement=True, nullable=False)
-    measure_type = Column(String(30), nullable=False)
-    tank_min_value = Column(Float, nullable=False)
-    tank_max_value = Column(Float, nullable=False)
-    tank_id = Column(Integer, ForeignKey('tanks.id'))
-"""

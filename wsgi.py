@@ -1,7 +1,5 @@
 from flask import Flask
 from flask_socketio import SocketIO, send
-from sqlalchemy.engine import create_engine
-from sqlalchemy.orm import sessionmaker
 
 import os
 import sys
@@ -18,9 +16,9 @@ print(f"Project root: {ROOT_DIR}")
 if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
 
-#if __name__ == '__main__':
-print("Socket IO has started!")
-socketio.run(app, host="0.0.0.0")
+if __name__ == '__main__':
+    print("Socket IO has started!")
+    socketio.run(app)
 
 """
 

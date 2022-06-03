@@ -1,4 +1,4 @@
-from sqlalchemy.ext.declarative import declarative_base
+"""from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, Float
 from sqlalchemy.orm import relationship
 
@@ -59,4 +59,4 @@ class Measurements(Base):
     value = Column(Float, nullable=False)
     timestamp = Column(Integer, nullable=False)
     tank_id = Column(Integer, ForeignKey('tanks.id'))
-    measures_categories_id = Column(Integer, ForeignKey('measures_categories.id'))
+    measures_categories_id = Column(Integer, ForeignKey('measures_categories.id'))"""
