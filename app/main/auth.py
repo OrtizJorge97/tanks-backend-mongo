@@ -108,7 +108,7 @@ def confirm_account(db, args, kwargs):
         print(email)
     except:
         status_message = 'Invalid token!'
-        return render_template('activation_status.html', account_status_message = status_message, front_url = front_url + '/log-in')
+        return render_template('activation_status.html', account_status_message = status_message, front_url = front_url + '/')
     
     try:
         #user_db = session.query(Users).filter_by(email=email).first()
