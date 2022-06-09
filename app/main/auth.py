@@ -122,10 +122,10 @@ def confirm_account(db, args, kwargs):
             users_collection.update_one(user_db, new_values)
             for x in users_collection.find():
                 print(x)
-            return render_template('activation_status.html', account_status_message = status_message, front_url = front_url + '/log-in')
+            return render_template('activation_status.html', account_status_message = status_message, front_url = front_url + '/')
         
         status_message = "Account already activated :)"
-        return render_template('activation_status.html', account_status_message = status_message, front_url = front_url + '/log-in')
+        return render_template('activation_status.html', account_status_message = status_message, front_url = front_url + '/')
     except Exception as e:
         print(str(e))
         return make_response(jsonify({"msg": str(e)}), 500)
