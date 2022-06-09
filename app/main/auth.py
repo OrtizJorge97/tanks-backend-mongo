@@ -112,6 +112,8 @@ def confirm_account(db, args, kwargs):
     
     try:
         #user_db = session.query(Users).filter_by(email=email).first()
+        print("PRINTING FRONT URL")
+        print(front_url)
         user_db = users_collection.find_one({"email": email})
         if not user_db['user_verified']:
             new_values = {
