@@ -32,7 +32,7 @@ def post_data(db, args, kwargs):
 
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=6)
 
-        dashboard_tasks = [executor.submit(destination, tanks_data, namespace='/private', to=company) for destination in ['tanks_data', 'get_tank_data', 'get_historic_data']]
+        dashboard_tasks = [executor.submit(socketio.emit, destination, tanks_data, namespace='/private', to=company) for destination in ['tanks_data', 'get_tank_data', 'get_historic_data']]
 
         print("TANKS DATA WEE")
         print(tanks_data)
