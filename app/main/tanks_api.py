@@ -31,9 +31,9 @@ def post_data(db, args, kwargs):
         print(body_json)
         company = body_json['company']
 
-        executor = concurrent.futures.ThreadPoolExecutor(max_workers=6)
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=6) 
         dashboard_threads = [
-            threading.Thread(target=socketio.emit, args=(destination, tanks_data, '/private', company), daemon=True)
+            threading.Thread(target=socketio.emit, args={"event": destination, "args": tanks_data, "namespace": "/private", "to": company}, daemon=True)
             for destination in ['tanks_data', 'get_tank_data', 'get_historic_data']
         ]
         for dashboard_thread in dashboard_threads:
