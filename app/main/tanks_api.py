@@ -31,6 +31,9 @@ def post_data(db, args, kwargs):
         company = body_json['company']
 
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=6)
+        
+        dashboard_tasks = [executor.submit(destination, tanks_data, namespace='/private', to=company) for destination in ['tanks_data', 'get_tank_data', 'get_historic_data']]
+        dashboard_results = [dashboard_task.result() for dashboard_task in dashboard_tasks]
 
         print("TANKS DATA WEE")
         print(tanks_data)
@@ -51,10 +54,10 @@ def post_data(db, args, kwargs):
 
         print("BEFORE SENDING DATA TO SOCKETS")
         print(tanks_data)
-
-        socketio.emit('tanks_data', tanks_data, namespace='/private', to=company)
-        socketio.emit('get_tank_data', tanks_data, namespace='/private', to=company)
-        socketio.emit('get_historic_data', tanks_data, namespace='/private', to=company)
+        
+        #socketio.emit('tanks_data', tanks_data, namespace='/private', to=company)
+        #socketio.emit('get_tank_data', tanks_data, namespace='/private', to=company)
+        #socketio.emit('get_historic_data', tanks_data, namespace='/private', to=company)
         return make_response(jsonify(msg="Success"), 200)
     except Exception as e:
         print(str(e))
