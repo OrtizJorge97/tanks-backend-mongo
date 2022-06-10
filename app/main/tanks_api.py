@@ -31,9 +31,8 @@ def post_data(db, args, kwargs):
         company = body_json['company']
 
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=6)
-        
+
         dashboard_tasks = [executor.submit(destination, tanks_data, namespace='/private', to=company) for destination in ['tanks_data', 'get_tank_data', 'get_historic_data']]
-        dashboard_results = [dashboard_task.result() for dashboard_task in dashboard_tasks]
 
         print("TANKS DATA WEE")
         print(tanks_data)
@@ -48,6 +47,7 @@ def post_data(db, args, kwargs):
         send_tanks_alerts = executor.submit(send_tank_alert_mail, email_results, tanks_parameters_results, tanks_data)
         send_tanks_alerts.result()
         
+        dashboard_results = [dashboard_task.result() for dashboard_task in dashboard_tasks]
         #emit('tanks_data', payload, namespace='/private', to=company)
         for tank_data in tanks_data:
             tank_data['_id'] = str(tank_data['_id'])
