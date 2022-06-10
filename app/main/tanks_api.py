@@ -1,6 +1,7 @@
 from flask import Flask, request, Blueprint, jsonify, make_response
 import concurrent.futures
 from flask_socketio import emit
+import threading
 
 from . import tank_api_blueprint
 from .models import *
@@ -31,8 +32,13 @@ def post_data(db, args, kwargs):
         company = body_json['company']
 
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=6)
-
-        dashboard_tasks = [executor.submit(socketio.emit, destination, tanks_data, namespace='/private', to=company) for destination in ['tanks_data', 'get_tank_data', 'get_historic_data']]
+        dashboard_threads = [
+            threading.Thread(target=socketio.emit, args=(destination, tanks_data, '/private', company), daemon=True)
+            for destination in ['tanks_data', 'get_tank_data', 'get_historic_data']
+        ]
+        for dashboard_thread in dashboard_threads:
+            dashboard_thread.start()
+        #dashboard_tasks = [executor.submit(socketio.emit, destination, tanks_data, namespace='/private', to=company) for destination in ['tanks_data', 'get_tank_data', 'get_historic_data']]
 
         print("TANKS DATA WEE")
         print(tanks_data)
@@ -47,14 +53,16 @@ def post_data(db, args, kwargs):
         send_tanks_alerts = executor.submit(send_tank_alert_mail, email_results, tanks_parameters_results, tanks_data)
         send_tanks_alerts.result()
         
-        dashboard_results = [dashboard_task.result() for dashboard_task in dashboard_tasks]
+        #dashboard_results = [dashboard_task.result() for dashboard_task in dashboard_tasks]
+
+
         #emit('tanks_data', payload, namespace='/private', to=company)
-        """for tank_data in tanks_data:
-            tank_data['_id'] = str(tank_data['_id'])"""
+        for tank_data in tanks_data:
+            tank_data['_id'] = str(tank_data['_id'])
 
         print("BEFORE SENDING DATA TO SOCKETS")
         print(tanks_data)
-        
+        socketio.emit()
         #socketio.emit('tanks_data', tanks_data, namespace='/private', to=company)
         #socketio.emit('get_tank_data', tanks_data, namespace='/private', to=company)
         #socketio.emit('get_historic_data', tanks_data, namespace='/private', to=company)
