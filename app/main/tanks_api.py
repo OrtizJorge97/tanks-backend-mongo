@@ -49,8 +49,8 @@ def post_data(db, args, kwargs):
         
         dashboard_results = [dashboard_task.result() for dashboard_task in dashboard_tasks]
         #emit('tanks_data', payload, namespace='/private', to=company)
-        for tank_data in tanks_data:
-            tank_data['_id'] = str(tank_data['_id'])
+        """for tank_data in tanks_data:
+            tank_data['_id'] = str(tank_data['_id'])"""
 
         print("BEFORE SENDING DATA TO SOCKETS")
         print(tanks_data)
