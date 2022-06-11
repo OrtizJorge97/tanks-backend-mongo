@@ -31,13 +31,14 @@ def post_data(db, args, kwargs):
         print(body_json)
         company = body_json['company']
 
+        def update_dashboard():
+            socketio.emit('tanks_data', tanks_data, namespace='/private', to=company)
+            socketio.emit('get_tank_data', tanks_data, namespace='/private', to=company)
+            socketio.emit('get_historic_data', tanks_data, namespace='/private', to=company)
+
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=6) 
-        dashboard_threads = [
-            threading.Thread(target=socketio.emit, args={"event": destination, "args": tanks_data, "namespace": "/private", "to": company}, daemon=True)
-            for destination in ['tanks_data', 'get_tank_data', 'get_historic_data']
-        ]
-        for dashboard_thread in dashboard_threads:
-            dashboard_thread.start()
+        dashboard_task = threading.Thread(target=update_dashboard, daemon=True)
+        dashboard_task.start()
         #dashboard_tasks = [executor.submit(socketio.emit, destination, tanks_data, namespace='/private', to=company) for destination in ['tanks_data', 'get_tank_data', 'get_historic_data']]
 
         print("TANKS DATA WEE")
