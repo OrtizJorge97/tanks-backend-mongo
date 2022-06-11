@@ -63,7 +63,6 @@ def post_data(db, args, kwargs):
 
         print("BEFORE SENDING DATA TO SOCKETS")
         print(tanks_data)
-        socketio.emit()
         #socketio.emit('tanks_data', tanks_data, namespace='/private', to=company)
         #socketio.emit('get_tank_data', tanks_data, namespace='/private', to=company)
         #socketio.emit('get_historic_data', tanks_data, namespace='/private', to=company)
