@@ -31,14 +31,14 @@ def post_data(db, args, kwargs):
         print(body_json)
         company = body_json['company']
 
-        def update_dashboard():
+        def update_dashboard(email_results, tanks_parameters_results, tanks_data):
             socketio.emit('tanks_data', tanks_data, namespace='/private', to=company)
             socketio.emit('get_tank_data', tanks_data, namespace='/private', to=company)
             socketio.emit('get_historic_data', tanks_data, namespace='/private', to=company)
 
+            send_tank_alert_mail(email_results, tanks_parameters_results, tanks_data)
+
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=6) 
-        dashboard_task = threading.Thread(target=update_dashboard, daemon=True)
-        dashboard_task.start()
         #dashboard_tasks = [executor.submit(socketio.emit, destination, tanks_data, namespace='/private', to=company) for destination in ['tanks_data', 'get_tank_data', 'get_historic_data']]
 
         print("TANKS DATA WEE")
@@ -51,8 +51,10 @@ def post_data(db, args, kwargs):
         email_results = company_staff_task.result()
         tanks_parameters_results = tanks_parameters_task.result()
         print("SENDING TANKS ALERT MESSAGE")
-        send_tanks_alerts = executor.submit(send_tank_alert_mail, email_results, tanks_parameters_results, tanks_data)
-        send_tanks_alerts.result()
+        dashboard_task = threading.Thread(target=update_dashboard, args=(email_results, tanks_parameters_results, tanks_data), daemon=True)
+        dashboard_task.start()
+        #send_tanks_alerts = executor.submit(send_tank_alert_mail, email_results, tanks_parameters_results, tanks_data)
+        #send_tanks_alerts.result()
         
         #dashboard_results = [dashboard_task.result() for dashboard_task in dashboard_tasks]
 
